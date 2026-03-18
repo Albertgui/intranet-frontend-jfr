@@ -2,8 +2,11 @@ import type { SubTask } from "./subTask.interface";
 
 export interface CreateTaskPayload {
   title: string;
-  description?: string;
+  description: string;
   meetingId: string;
+  assignedTo?: string;
+  priority?: string;
+  status?: string;
 }
 
 export interface Task {
@@ -11,7 +14,11 @@ export interface Task {
   title: string
   description?: string
   meetingId: string
-  subTasks?: SubTask[]
+  assignedToId?: string
+  assignedTo?: { name: string }
+  priority?: string
+  status?: string
+  subtasks?: SubTask[]
 }
 
 export interface TaskListProps {

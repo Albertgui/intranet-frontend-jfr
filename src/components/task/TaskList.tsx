@@ -1,46 +1,71 @@
-import { useState } from "react"
-import { Trash2, Plus, Loader2, GripVertical, CheckSquare } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Trash2, Plus, Loader2, GripVertical, CheckSquare, UserCircle, Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createTask, deleteTask } from "@/api/tasksApi"
-import type { TaskListProps, Task } from "@/interfaces/task.interface"
+import type { User } from "@/interfaces/users.interface"
+import { getUser } from "@/api/userApi"
+import type { Task, TaskListProps } from "@/interfaces/task.interface"
 import { SubTaskList } from "./SubTaskList"
 
 export function TaskList({ meetingId, initialTasks }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [users, setUsers] = useState<User[]>([])
   const [newTaskTitle, setNewTaskTitle] = useState("")
+  const [newTaskDescription, setNewTaskDescription] = useState("")
+  const [selectedUserId, setSelectedUserId] = useState<string>("")
+  const [selectedPriority, setSelectedPriority] = useState<string>("")
   const [isAdding, setIsAdding] = useState(false)
+
+  useEffect(() => {
+    const fetchVoceros = async () => {
+      try {
+        const voceros = await getUser();
+        setUsers(voceros);
+      } catch (error) {
+        console.error("Error cargando voceros", error);
+      }
+    };
+    fetchVoceros();
+  }, []);
 
   const handleDeleteTask = async (taskId: string) => {
     if (!window.confirm("¿Estás seguro de eliminar esta tarea y todos sus pasos?")) return;
-
     const previousTasks = [...tasks]
     setTasks((current) => current.filter((t) => t.id !== taskId))
-
     try {
       await deleteTask(taskId)
     } catch (error) {
-      console.error("Error al eliminar la tarea principal:", error)
-      alert("Hubo un error al eliminar la tarea.")
-      setTasks(previousTasks)
+      console.error("Error al eliminar la tarea:", error)
+      setTasks(previousTasks) 
     }
   }
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newTaskTitle.trim()) return
+    if (!newTaskTitle.trim() || !newTaskDescription.trim()) return
 
     setIsAdding(true)
     try {
-      const newTask = await createTask({ 
-        title: newTaskTitle, 
-        meetingId 
-      })
-      setTasks((current) => [...current, { ...newTask, subTasks: [] }])
+      const payload = {
+        title: newTaskTitle,
+        description: newTaskDescription,
+        meetingId,
+        assignedTo: selectedUserId || undefined,
+        priority: selectedPriority || undefined,
+      };
+
+      const newTask = await createTask(payload)
+      const assignedUser = users.find(u => u.id === selectedUserId);
+      
+      setTasks((current) => [...current, { ...newTask, assignedTo: assignedUser, subtasks: [] }])
       setNewTaskTitle("") 
+      setNewTaskDescription("")
+      setSelectedUserId("")
+      setSelectedPriority("")
     } catch (error) {
-      console.error("Error al crear la tarea principal:", error)
-      alert("Hubo un error al crear la tarea.")
+      console.error("Error al crear la tarea:", error)
+      alert("Hubo un error al crear la tarea. Verifica los datos.")
     } finally {
       setIsAdding(false)
     }
@@ -56,63 +81,102 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
       ) : (
         <div className="space-y-4">
           {tasks.map((task) => (
-            <div 
-              key={task.id} 
-              className="group bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
+            <div key={task.id} className="group bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-3">
-                  <GripVertical className="w-5 h-5 text-slate-300 mt-0.5 cursor-grab hidden sm:block hover:text-slate-500" />
+                  <GripVertical className="w-5 h-5 text-slate-300 mt-1 hidden sm:block" />
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">{task.title}</h3>
+                    <h3 className="text-lg font-bold text-slate-900">{task.title}</h3>
                     {task.description && (
-                      <p className="text-sm text-slate-500 mt-1">{task.description}</p>
+                      <p className="text-sm text-slate-600 mt-1">{task.description}</p>
                     )}
+                    
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      {task.assignedTo && (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">
+                          <UserCircle className="w-4 h-4" />
+                          {task.assignedTo.name}
+                        </div>
+                      )}
+                      {task.priority && (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-md">
+                          <Flag className="w-3.5 h-3.5" />
+                          {task.priority}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteTask(task.id)}
-                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-opacity -mr-2 -mt-2"
-                  title="Eliminar tarea principal"
+                  variant="ghost" size="icon" onClick={() => handleDeleteTask(task.id)}
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 hover:bg-red-50 -mr-2 -mt-2 transition-opacity"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
-              <SubTaskList 
-                taskId={task.id} 
-                initialSubTasks={task.subTasks || []} 
-              />
+              <div className="pl-0 sm:pl-8">
+                <SubTaskList taskId={task.id} initialSubTasks={task.subtasks || []} />
+              </div>
             </div>
           ))}
         </div>
       )}
-      <div className="pt-4 border-t border-slate-100">
-        <form onSubmit={handleAddTask} className="flex items-center gap-3">
-          <Input
-            type="text"
-            placeholder="Buscar..."
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            disabled={isAdding}
-            className="flex-1 bg-slate-50 border-slate-200 focus-visible:bg-white"
-          />
-          <Button 
-            type="submit" 
-            disabled={isAdding || !newTaskTitle.trim()}
-            className="bg-slate-900 hover:bg-slate-800 text-white shrink-0"
-          >
-            {isAdding ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Plus className="w-4 h-4 mr-2" />
-            )}
-            {isAdding ? "Guardando..." : "Agregar Tarea"}
-          </Button>
+      <div className="pt-6 border-t border-slate-100">
+        <form onSubmit={handleAddTask} className="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 space-y-3">
+          <h4 className="text-sm font-semibold text-slate-700 mb-2">Registrar Nuevo Acuerdo</h4>
+          <div className="grid grid-cols-1 gap-3">
+            <Input
+              type="text"
+              placeholder="Título de la tarea..."
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              disabled={isAdding}
+              className="bg-white"
+            />
+            <Input
+              type="text"
+              placeholder="Descripción detallada (Obligatorio)..."
+              value={newTaskDescription}
+              onChange={(e) => setNewTaskDescription(e.target.value)}
+              disabled={isAdding}
+              className="bg-white"
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              disabled={isAdding || users.length === 0}
+              className="flex-1 h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="">Responsable (Opcional)</option>
+              {users.map(user => (
+                <option key={user.id} value={user.id}>{user.name}</option>
+              ))}
+            </select>
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              disabled={isAdding}
+              className="flex-1 h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="">Prioridad (Opcional)</option>
+              <option value="BAJA">Baja</option>
+              <option value="MEDIA">Media</option>
+              <option value="ALTA">Alta</option>
+              <option value="URGENTE">Urgente</option>
+            </select>
+            <Button 
+              type="submit" 
+              disabled={isAdding || !newTaskTitle.trim() || !newTaskDescription.trim()} 
+              className="bg-slate-900 text-white shrink-0"
+            >
+              {isAdding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              Guardar Tarea
+            </Button>
+          </div>
         </form>
       </div>
-
     </div>
   )
 }

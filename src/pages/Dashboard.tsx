@@ -45,7 +45,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-10">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="mx-auto space-y-8">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Panel de Control</h1>
           <p className="text-slate-500 mt-2">
@@ -100,7 +100,7 @@ export function DashboardPage() {
                 Gestionar Actas
               </Button>
               <Button 
-                onClick={() => alert("Próximamente: Módulo de Usuarios")} 
+                onClick={() => navigate('/users')} 
                 variant="outline"
                 className="w-full bg-transparent border-indigo-400 text-white hover:bg-indigo-500 hover:text-white justify-start"
               >

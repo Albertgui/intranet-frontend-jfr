@@ -5,3 +5,10 @@ export interface User {
   role: 'ADMIN' | 'VOCERO' | 'USER';
   createdAt: string;
 }
+
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  password: string;
+  role: 'ADMIN' | 'VOCERO' | 'USER';
+}

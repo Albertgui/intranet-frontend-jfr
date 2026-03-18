@@ -5,15 +5,17 @@ import {
   Users, 
   ShieldCheck, 
   User as UserIcon, 
-  Trash2, 
-  Plus, 
+  Trash2,
   Loader2, 
   Search
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import type { User } from "@/interfaces/users.interface"
+import { CreateUserDialog } from "@/components/user/CreateUserDialog"
+import { useAuth } from "@/hooks/useAuth"
 
 export function UsersPage() {
+  const { role } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +61,7 @@ export function UsersPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-10">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -80,9 +82,9 @@ export function UsersPage() {
                 className="pl-9 w-full sm:w-64 bg-slate-50"
               />
             </div>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 shrink-0 shadow-sm">
-              <Plus className="w-4 h-4 mr-2" /> Nuevo Vocero
-            </Button>
+            {role === 'ADMIN' && (
+              <CreateUserDialog onSuccess={fetchUsers} />
+            )}
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -105,7 +107,7 @@ export function UsersPage() {
                     <th className="font-semibold py-4 px-6">Usuario</th>
                     <th className="font-semibold py-4 px-6">Rol de Sistema</th>
                     <th className="font-semibold py-4 px-6">Fecha de Registro</th>
-                    <th className="font-semibold py-4 px-6 text-right">Acciones</th>
+                    {role === 'ADMIN' && <th className="font-semibold py-4 px-6 text-right">Acciones</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -137,15 +139,17 @@ export function UsersPage() {
                         {new Date(user.createdAt).toLocaleDateString('es-VE')}
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleDelete(user.id, user.name)}
-                          className="text-slate-400 hover:text-red-600 hover:bg-red-50"
-                          title="Eliminar usuario"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {role === 'ADMIN' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDelete(user.id, user.name)}
+                            className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            title="Eliminar usuario"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}

@@ -1,4 +1,4 @@
-import type { User } from "@/interfaces/users.interface";
+import type { CreateUserPayload, User } from "@/interfaces/users.interface";
 import { apiClient } from "./clientApi"
 
 export const getUser = async() => {
@@ -11,7 +11,7 @@ export const deleteUser = async (id: string) => {
   return response.data;
 };
 
-export const createUser = async (data: User) => {
+export const createUser = async (data: CreateUserPayload) => {
   const response = await apiClient.post('/users', data);
   return response.data;
 };

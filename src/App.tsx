@@ -6,6 +6,7 @@ import { DashboardPage } from "./pages/Dashboard"
 import { ProtectedRoute } from "./components/auth/ProtectedRoute"
 import { PublicRoute } from "./components/auth/PublicRoute"
 import { UsersPage } from "./pages/Users"
+import { MainLayout } from "./components/layout/MainLayout"
 
 function App() {
   return (
@@ -15,10 +16,12 @@ function App() {
           <Route path="/login" element={<Login />} />
         </Route>
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/meetings" element={<MeetingsPage />} />
-          <Route path="/meetings/:id" element={<MeetingDetailsPage />} />
-          <Route path="/users" element={<UsersPage />} />
+          <Route element={<MainLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/meetings" element={<MeetingsPage />} />
+            <Route path="/meetings/:id" element={<MeetingDetailsPage />} />
+            <Route path="/users" element={<UsersPage />} />
+          </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
