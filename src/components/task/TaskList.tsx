@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Trash2, Plus, Loader2, GripVertical, CheckSquare, UserCircle, Flag } from "lucide-react"
+import { Trash2, Plus, Loader2, GripVertical, CheckSquare, UserCircle, Flag, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createTask, deleteTask } from "@/api/tasksApi"
@@ -15,6 +15,7 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
   const [newTaskDescription, setNewTaskDescription] = useState("")
   const [selectedUserId, setSelectedUserId] = useState<string>("")
   const [selectedPriority, setSelectedPriority] = useState<string>("")
+  const [newTaskDueDate, setNewTaskDueDate] = useState("")
   const [isAdding, setIsAdding] = useState(false)
 
   useEffect(() => {
@@ -41,6 +42,16 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
     }
   }
 
+  const formatLocalDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTaskTitle.trim() || !newTaskDescription.trim()) return
@@ -53,6 +64,7 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
         meetingId,
         assignedTo: selectedUserId || undefined,
         priority: selectedPriority || undefined,
+        dueDate: newTaskDueDate || undefined,
       };
 
       const newTask = await createTask(payload)
@@ -63,6 +75,7 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
       setNewTaskDescription("")
       setSelectedUserId("")
       setSelectedPriority("")
+      setNewTaskDueDate("")
     } catch (error) {
       console.error("Error al crear la tarea:", error)
       alert("Hubo un error al crear la tarea. Verifica los datos.")
@@ -84,7 +97,7 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
             <div key={task.id} className="group bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-3">
-                  <GripVertical className="w-5 h-5 text-slate-300 mt-1 hidden sm:block" />
+                  <GripVertical className="w-5 h-5 text-slate-300 mt-1 hidden sm:block print:hidden" />
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">{task.title}</h3>
                     {task.description && (
@@ -104,12 +117,18 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
                           {task.priority}
                         </div>
                       )}
+                      {task.dueDate && (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-rose-700 bg-rose-50 border border-rose-100 px-2.5 py-1 rounded-md">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>Límite: {formatLocalDate(task.dueDate)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
                 <Button
                   variant="ghost" size="icon" onClick={() => handleDeleteTask(task.id)}
-                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 hover:bg-red-50 -mr-2 -mt-2 transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 hover:bg-red-50 -mr-2 -mt-2 transition-opacity print:hidden"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -121,7 +140,7 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
           ))}
         </div>
       )}
-      <div className="pt-6 border-t border-slate-100">
+      <div className="pt-6 border-t border-slate-100 print:hidden">
         <form onSubmit={handleAddTask} className="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 space-y-3">
           <h4 className="text-sm font-semibold text-slate-700 mb-2">Registrar Nuevo Acuerdo</h4>
           <div className="grid grid-cols-1 gap-3">
@@ -142,12 +161,12 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
               className="bg-white"
             />
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
             <select
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
               disabled={isAdding || users.length === 0}
-              className="flex-1 h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="">Responsable (Opcional)</option>
               {users.map(user => (
@@ -158,7 +177,7 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
               value={selectedPriority}
               onChange={(e) => setSelectedPriority(e.target.value)}
               disabled={isAdding}
-              className="flex-1 h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="">Prioridad (Opcional)</option>
               <option value="BAJA">Baja</option>
@@ -166,10 +185,22 @@ export function TaskList({ meetingId, initialTasks }: TaskListProps) {
               <option value="ALTA">Alta</option>
               <option value="URGENTE">Urgente</option>
             </select>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-medium shrink-0">Fecha Límite:</span>
+              <Input
+                type="date"
+                value={newTaskDueDate}
+                onChange={(e) => setNewTaskDueDate(e.target.value)}
+                disabled={isAdding}
+                className="bg-white flex-1 h-10"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end pt-2">
             <Button 
               type="submit" 
               disabled={isAdding || !newTaskTitle.trim() || !newTaskDescription.trim()} 
-              className="bg-slate-900 text-white shrink-0"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto"
             >
               {isAdding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
               Guardar Tarea

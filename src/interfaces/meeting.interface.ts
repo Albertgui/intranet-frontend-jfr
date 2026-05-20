@@ -7,6 +7,7 @@ export interface Meeting {
   date: string;
   location: string | null;
   createdAt: string;
+  tasks?: Task[];
 }
 
 export interface MeetingListProps {
@@ -16,6 +17,20 @@ export interface MeetingListProps {
   onRefresh: () => void;
 }
 
+export interface Attendance {
+  id: string;
+  meetingId: string;
+  userId?: string | null;
+  customName?: string | null;
+  user?: {
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+  } | null;
+  createdAt: string;
+}
+
 export interface MeetingDetail {
   id: string
   title: string
@@ -23,4 +38,5 @@ export interface MeetingDetail {
   date: string
   location?: string
   tasks?: Task[]
+  attendances?: Attendance[]
 }

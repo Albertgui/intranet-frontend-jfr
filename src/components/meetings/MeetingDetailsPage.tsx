@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { apiClient } from "../../api/clientApi"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calendar, MapPin, AlignLeft, CheckSquare, Loader2, Printer } from "lucide-react"
 import { TaskList } from "../task/TaskList"
+import { AttendanceSection } from "./AttendanceSection"
 import type { MeetingDetail } from "@/interfaces/meeting.interface"
 
 export function MeetingDetailsPage() {
@@ -20,21 +21,27 @@ export function MeetingDetailsPage() {
     return new Date(dateString).toLocaleDateString('es-VE', options);
   };
 
+  const fetchMeetingDetails = useCallback(async () => {
+    try {
+      const response = await apiClient.get(`/meetings/${id}`)
+      setMeeting(response.data)
+    } catch (err) {
+      setError("No se pudo cargar la información del acta.")
+      console.error(err)
+    }
+  }, [id])
+
   useEffect(() => {
-    const fetchMeetingDetails = async () => {
+    const initFetch = async () => {
       try {
         setLoading(true)
-        const response = await apiClient.get(`/meetings/${id}`)
-        setMeeting(response.data)
-      } catch (err) {
-        setError("No se pudo cargar la información del acta.")
-        console.error(err)
+        await fetchMeetingDetails()
       } finally {
         setLoading(false)
       }
     }
-    if (id) fetchMeetingDetails()
-  }, [id])
+    if (id) initFetch()
+  }, [id, fetchMeetingDetails])
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-500" /></div>
   if (error || !meeting) return <div className="text-center mt-20">{error}</div>
@@ -86,6 +93,11 @@ export function MeetingDetailsPage() {
             </div>
           )}
         </div>
+        <AttendanceSection
+          meetingId={meeting.id}
+          attendances={meeting.attendances || []}
+          onRefresh={fetchMeetingDetails}
+        />
         <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm mt-6 print:border-none print:shadow-none print:p-0 print:break-inside-avoid">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
@@ -97,8 +109,42 @@ export function MeetingDetailsPage() {
           </div>
           <TaskList meetingId={meeting.id} initialTasks={meeting.tasks || []} />
         </div>
-        <div className="hidden print:block mt-24 pt-12">
-          <div className="grid grid-cols-2 gap-16 text-center">
+        <div className="hidden print:block mt-12 pt-8 border-t border-slate-300 print:break-inside-avoid">
+          <h3 className="text-base font-bold text-black uppercase tracking-wide mb-4">
+            Registro de Asistencia y Firmas de la Asamblea
+          </h3>
+          {(!meeting.attendances || meeting.attendances.length === 0) ? (
+            <p className="text-sm text-slate-500 italic">No se registraron asistentes digitalmente para esta reunión.</p>
+          ) : (
+            <table className="w-full border-collapse border border-slate-400 text-sm mb-8">
+              <thead>
+                <tr className="bg-slate-100">
+                  <th className="border border-slate-400 px-3 py-1.5 text-left w-12">#</th>
+                  <th className="border border-slate-400 px-3 py-1.5 text-left">Nombre y Apellido</th>
+                  <th className="border border-slate-400 px-3 py-1.5 text-left w-36">Rol / Condición</th>
+                  <th className="border border-slate-400 px-3 py-1.5 text-center w-56">Firma / Rúbrica / Huella</th>
+                </tr>
+              </thead>
+              <tbody>
+                {meeting.attendances.map((att, idx) => {
+                  const name = att.userId ? att.user?.name : att.customName;
+                  const role = att.userId ? att.user?.role : "Habitante Externo";
+                  return (
+                    <tr key={att.id}>
+                      <td className="border border-slate-400 px-3 py-2 text-slate-800">{idx + 1}</td>
+                      <td className="border border-slate-400 px-3 py-2 font-medium text-black">{name}</td>
+                      <td className="border border-slate-400 px-3 py-2 text-slate-800 uppercase text-xs font-semibold">{role}</td>
+                      <td className="border border-slate-400 px-3 py-2 text-center">
+                        <div className="border-b border-dotted border-slate-500 w-44 mx-auto h-5"></div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          
+          <div className="grid grid-cols-2 gap-16 text-center mt-16 print:break-inside-avoid">
             <div>
               <div className="border-b border-black w-48 mx-auto mb-2"></div>
               <p className="font-bold text-black text-sm">Vocero Responsable</p>
@@ -110,6 +156,7 @@ export function MeetingDetailsPage() {
               <p className="text-xs text-slate-500">Firma</p>
             </div>
           </div>
+          
           <p className="text-center text-xs text-slate-400 mt-16">
             Documento generado a través del Sistema JFR Comunal el {new Date().toLocaleDateString('es-VE')}
           </p>

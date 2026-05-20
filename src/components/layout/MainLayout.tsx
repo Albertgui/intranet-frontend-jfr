@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { NavLink, Outlet } from "react-router-dom"
-import { LayoutDashboard, FileText, Users, Menu, X } from "lucide-react"
+import { LayoutDashboard, FileText, Users, Menu, X, Calendar } from "lucide-react"
 import { LogoutButton } from "../shared/LogoutButton"
 import { cn } from "@/lib/utils"
 import logoJFR from "../../assets/logoJFR.jpeg"
@@ -10,6 +10,7 @@ export function MainLayout() {
 
   const navItems = [
     { name: "Panel de Control", path: "/dashboard", icon: LayoutDashboard },
+    { name: "Calendario", path: "/calendar", icon: Calendar },
     { name: "Actas y Acuerdos", path: "/meetings", icon: FileText },
     { name: "Directorio", path: "/users", icon: Users },
   ]

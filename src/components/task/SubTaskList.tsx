@@ -87,7 +87,7 @@ export function SubTaskList({ taskId, initialSubTasks }: SubTaskListProps) {
             <button
               type="button"
               onClick={() => handleDelete(subTask.id)}
-              className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all focus:opacity-100 focus:outline-none"
+              className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all focus:opacity-100 focus:outline-none print:hidden"
               title="Eliminar subtarea"
             >
               <Trash2 className="w-4 h-4" />
@@ -95,7 +95,7 @@ export function SubTaskList({ taskId, initialSubTasks }: SubTaskListProps) {
           </li>
         ))}
       </ul>
-      <form onSubmit={handleAdd} className="flex items-center gap-2 pt-2">
+      <form onSubmit={handleAdd} className="flex items-center gap-2 pt-2 print:hidden">
         <Plus className="w-4 h-4 text-slate-400 shrink-0 ml-1" />
         <Input
           type="text"

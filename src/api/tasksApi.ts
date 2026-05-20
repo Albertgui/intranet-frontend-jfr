@@ -1,8 +1,13 @@
-import type { CreateTaskPayload } from '@/interfaces/task.interface';
+import type { CreateTaskPayload, Task } from '@/interfaces/task.interface';
 import { apiClient } from './clientApi';
 
 export const createTask = async (data: CreateTaskPayload) => {
   const response = await apiClient.post('/tasks', data);
+  return response.data;
+};
+
+export const getTasksApi = async () => {
+  const response = await apiClient.get<Task[]>('/tasks');
   return response.data;
 };
 

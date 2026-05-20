@@ -7,6 +7,7 @@ export interface CreateTaskPayload {
   assignedTo?: string;
   priority?: string;
   status?: string;
+  dueDate?: string;
 }
 
 export interface Task {
@@ -18,6 +19,11 @@ export interface Task {
   assignedTo?: { name: string }
   priority?: string
   status?: string
+  dueDate?: string
+  meeting?: {
+    title: string
+    date: string
+  }
   subtasks?: SubTask[]
 }
 

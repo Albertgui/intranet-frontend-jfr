@@ -18,3 +18,13 @@ export const createMeetingApi = async (meetingData: Partial<Meeting>) => {
     console.error(error)
   }
 }
+
+export const addAttendeeApi = async (meetingId: string, payload: { userId?: string; customName?: string }) => {
+  const response = await apiClient.post(`/meetings/${meetingId}/attendance`, payload);
+  return response.data;
+};
+
+export const removeAttendeeApi = async (meetingId: string, attendanceId: string) => {
+  const response = await apiClient.delete(`/meetings/${meetingId}/attendance/${attendanceId}`);
+  return response.data;
+};

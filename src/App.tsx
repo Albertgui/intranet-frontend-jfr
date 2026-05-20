@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute"
 import { PublicRoute } from "./components/auth/PublicRoute"
 import { UsersPage } from "./pages/Users"
 import { MainLayout } from "./components/layout/MainLayout"
+import { CalendarPage } from "./pages/Calendar"
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/meetings" element={<MeetingsPage />} />
             <Route path="/meetings/:id" element={<MeetingDetailsPage />} />
             <Route path="/users" element={<UsersPage />} />

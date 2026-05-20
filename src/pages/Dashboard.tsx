@@ -12,6 +12,7 @@ import {
 import type { DashboardStats } from "@/interfaces/dashboard.interface"
 import { getDashboardData } from "@/api/dashboardApi"
 import { InfoCards } from "@/components/dashboard/InfoCards"
+import { DashboardCharts } from "@/components/dashboard/DashboardCharts"
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ export function DashboardPage() {
           </p>
         </div>
         {stats && <InfoCards stats={stats} />}
+        {stats && <DashboardCharts stats={stats} />}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 shadow-sm border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
